@@ -2,28 +2,44 @@ const express = require('express');
 const req = require('express/lib/request');
 const app = express();
 const handlebars = require('express-handlebars');
-const Sequelize = require('sequelize')
+const bodyParser = require('body-parser')
+const Post = require('./models/Post')
 
 
 //config
     // Template Engine
-    const hbs = handlebars.create({defaultLayout: "main"})
-    app.engine("handlebars", () => hbs)
-    app.set("view engine", "handlebars")
+    app.engine('handlebars', handlebars.engine({defaultLayout: 'main'}));
+    app.set('view engine', 'handlebars');
 
-    // Conexão com o banco de dados Mysql    
-        const sequelize = new Sequelize('teste', 'root', '1234', {
-            host: "localhost",
-            dialect: 'mysql'
-        })
+    //Body Parser
+    app.use(express.json())
+    app.use(express.urlencoded({extended: true}));
+    
+  
 
     // Rotas
 
-    app.get('/cad', function(req, res) {
-        res.send('Rota de Cadastro de posts')
+    app.get('/', function(req, res) {
+        Post.findAll({order: [['id', 'desc']]}).then(function(posts) {
+        res.render('home', {posts: posts})
+
+        })
     })
 
+    app.get('/cad', function(req, res) {
+        res.render('formulario')
+    })
 
+    app.post('/add', function(req, res) {
+        Post.create({
+            titulo: req.body.titulo,
+            conteudo: req.body.conteudo
+        }).then(function() {
+            res.redirect('./')
+        }).catch(function(erro){
+            res.send("Houve um erro: " + erro)
+        })
+    })
 
 app.listen(8081, function() {
     console.log('Servidor Rodando na url http://localhost:8081')
